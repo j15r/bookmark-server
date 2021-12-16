@@ -1,2 +1,3 @@
-# bookmark-server
-Simple bookmark server to sync browser bookmarks with  WebExtensions
+# bookmark server
+
+Simple self hosted bookmark server to sync browser bookmarks with WebExtension.
