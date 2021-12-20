@@ -11,5 +11,11 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+  bookmark-server:
+    container_name: bookmark-server
+    image: bookmark-server:latest
+    ports:
+      - 8080:8080
+
 volumes:
   mongodb_data:

@@ -2,13 +2,12 @@ package bookmarks
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/j15r/bookmark-server/internal/db"
-	"github.com/j15r/bookmark-server/internal/helper"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,26 +21,32 @@ type Bookmark struct {
 	UserId  primitive.ObjectID `json:"userId" bson:"userId"`
 }
 
-func GetBookmarksHandler(bookmarkCollection *db.DB) gin.HandlerFunc {
-	return gin.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		loginId := r.Context().Value("loginId")
-		if loginId != nil {
-			bsonObjectID := bson.ObjectIdHex(loginId.(string))
-			var bookmarks []Bookmark
-			err := bookmarkCollection.collection.Find(bson.M{"userId": bsonObjectID}).All(&bookmarks)
-			if err != nil {
-				helper.SendError(w, err.Error(), http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-			} else {
-				body, _ := json.Marshal(bookmarks)
-				helper.SendResponse(w, body, http.StatusOK)
-			}
-		} else {
-			helper.SendError(w, "Context has no loginId", http.StatusInternalServerError)
-		}
-	})
+func GetBookmarksHandler(c *gin.Context, dbBookmark *db.DB) gin.HandlerFunc {
+	loginId := c.Value("loginId")
+	if loginId == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "Unauthorized"})
+		return nil
+	}
+
+	bsonObjectID, err := primitive.ObjectIDFromHex(loginId.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err})
+		return nil
+	}
+
+	var bookmarks []Bookmark
+	cursor, err := dbBookmark.collection.Find(c, bson.M{"userId": bsonObjectID}).All(&bookmarks)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err})
+		return nil
+	}
+
+	body, _ := json.Marshal(bookmarks)
+	c.JSON(http.StatusOK, gin.H{"status": body})
+	return nil
 }
 
+/*
 func GetBookmarkHandler(bookmarkCollection *db.DB) gin.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		loginId := r.Context().Value("loginId")
@@ -126,3 +131,4 @@ func PutBookmarkHandler(bookmarkCollection *db.DB) gin.HandlerFunc {
 		}
 	})
 }
+*/
