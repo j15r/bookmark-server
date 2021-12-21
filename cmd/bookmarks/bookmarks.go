@@ -1,6 +1,7 @@
 package bookmarks
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/j15r/bookmark-server/internal/db"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Bookmark struct {
@@ -21,29 +23,43 @@ type Bookmark struct {
 	UserId  primitive.ObjectID `json:"userId" bson:"userId"`
 }
 
-func GetBookmarksHandler(c *gin.Context, dbBookmark *db.DB) gin.HandlerFunc {
-	loginId := c.Value("loginId")
+var Client *mongo.Client = db.GetDBClient()
+
+var bookmarksCollection *mongo.Collection = db.OpenCollection(Client, "bookmarks")
+
+func GetBookmarks(c *gin.Context) {
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+
+	/** loginId := c.Value("loginId")
 	if loginId == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"status": "Unauthorized"})
-		return nil
+		return
 	}
 
 	bsonObjectID, err := primitive.ObjectIDFromHex(loginId.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": err})
-		return nil
+		return
 	}
+	**/
 
 	var bookmarks []Bookmark
-	cursor, err := dbBookmark.collection.Find(c, bson.M{"userId": bsonObjectID}).All(&bookmarks)
+	cursor, err := bookmarksCollection.Find(ctx, bson.M{"userId": "test12345"})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": err})
-		return nil
+		return
 	}
+
+	err = cursor.All(c, &bookmarks)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err})
+		return
+	}
+
+	defer cancel()
 
 	body, _ := json.Marshal(bookmarks)
 	c.JSON(http.StatusOK, gin.H{"status": body})
-	return nil
 }
 
 /*

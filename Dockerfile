@@ -14,16 +14,16 @@ RUN go mod download
 
 COPY . .
 
-RUN go build ./cmd/server.go
+RUN go build -o bookmark-server ./cmd/server.go
 
 ################################
 #             prod             #
 ################################
 FROM gcr.io/distroless/base-debian10
 
-WORKDIR /
+WORKDIR /srv
 
-COPY --from=build /bookmark-server /bookmark-server
+COPY --from=build /srv/bookmark-server ./bookmark-server
 
 EXPOSE 8080
 
