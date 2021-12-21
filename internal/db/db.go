@@ -56,5 +56,5 @@ func GetDBClient() *mongo.Client {
 }
 
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	return client.Database("cluster0").Collection(collectionName)
+	return client.Database("bookmarks").Collection(collectionName)
 }

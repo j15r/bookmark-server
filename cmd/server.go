@@ -11,7 +11,6 @@ func main() {
 
 	// r.GET("/api/bookmarks", CheckAuth(dbLogins)(BookmarkGetHandler(dbBookmarks)))
 	r.GET("/api/bookmarks", bookmarks.GetBookmarks)
-	// r.OPTIONS("/api/bookmarks", bookmarks.GetBookmarksHandler(dbBookmarks))
 	// r.GET("/api/bookmarks/{id:[a-zA-Z0-9]*}", bookmarks.GetBookmarkHandler(dbBookmarks))
 	// r.POST("/api/bookmarks", bookmarks.PostBookmarkHandler(dbBookmarks))
 	// r.PUT("/api/bookmarks", bookmarks.PutBookmarkHandler(dbBookmarks))
